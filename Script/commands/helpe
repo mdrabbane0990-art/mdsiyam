@@ -1,0 +1,417 @@
+const fs = require("fs-extra");
+const request = require("request");
+const path = require("path");
+
+module.exports.config = {
+    name: "helpe",
+    version: "3.0.0",
+    hasPermssion: 0,
+    credits: "Siyam (Final Edit)",
+    description: "Full Stylish Help Menu",
+    commandCategory: "system",
+    usages: "[command]",
+    cooldowns: 5
+};
+
+const helpImages = [
+    "https://i.imgur.com/ZD5ng1c.jpeg",
+    "https://i.imgur.com/92xZO9N.jpeg"
+];
+
+function downloadImages(callback) {
+    const url = helpImages[Math.floor(Math.random() * helpImages.length)];
+    const filePath = path.join(__dirname, "cache", "help.jpg");
+
+    request(url)
+        .pipe(fs.createWriteStream(filePath))
+        .on("close", () => callback([filePath]));
+}
+
+module.exports.run = function ({ api, event }) {
+    const { threadID, messageID } = event;
+
+    const helpText = `🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤
+𝘽𝙊𝙏 𝙃𝙀𝙇𝙋 𝙈𝙀𝙉𝙐
+🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤🖤
+
+💠 SYSTEM 💠
+• help • helpall • prefix • setprefix • setname • setemoji • settings
+
+💠 ADMIN 💠
+• admin • adminonly • adduser • kick • ban • out
+
+💠 GROUP 💠
+• groupname • groupimage • listadmin
+
+💠 INFO 💠
+• info • uid • tid
+
+💠 MEDIA 💠
+• video • song • youtube
+
+💠 FUN 💠
+• slap • hug • kiss • love
+
+💠 GAME 💠
+• slot • quiz
+
+💠 AI 💠
+• ai • prompt
+
+💠 SEARCH 💠
+• google • search
+
+💠 TOOLS 💠
+• uptime • say
+
+━━━━━━━━━━━━━━━━━━
+
+🔥 এডমিন ছাড়া ট্রাই করলে কাজ করবে না 🔥
+🔥 দেখাবে এই কমান্ড নেই..............🔥
+
+ 💠• slap 💠
+ 💠• hug 💠
+ 💠• kiss 💠
+ 💠• love 💠
+ 💠• cry 💠
+ 💠• laugh 💠
+ 💠• dance 💠
+ 💠• sing 💠
+ 💠• joke 💠
+ 💠• roast 💠
+ 💠• marry 💠
+ 💠• divorce 💠
+ 💠• date 💠
+ 💠• propose 💠
+ 💠• prank 💠
+ 💠• ghost 💠
+ 💠• zombie 💠
+ 💠• ninja 💠
+ 💠• hacker 💠
+ 💠• spy 💠
+ 💠• police 💠
+ 💠• thief 💠
+ 💠• king 💠
+ 💠• queen 💠
+ 💠• baby 💠
+ 💠• boss 💠
+ 💠• noob 💠
+ 💠• pro 💠
+ 💠• god 💠
+ 💠• devil 💠
+ 💠• angel 💠
+ 💠• demon 💠
+ 💠• fire 💠
+ 💠• ice 💠
+ 💠• thunder 💠
+ 💠• storm 💠
+ 💠• rain 💠
+ 💠• snow 💠
+ 💠• sun 💠
+ 💠• moon 💠
+ 💠• star 💠
+ 💠• galaxy 💠
+ 💠• universe 💠
+ 💠• blackhole 💠
+ 💠• time 💠
+ 💠• future 💠
+ 💠• past 💠
+ 💠• dream 💠
+ 💠• nightmare 💠
+ 💠• sleep 💠
+ 💠• wakeup 💠
+ 💠• coffee 💠
+ 💠• tea 💠
+ 💠• milk 💠
+ 💠• cola 💠
+ 💠• burger 💠
+ 💠  𝐒𝐢𝐲𝐚𝐦 𝐇𝐚𝐬𝐚𝐧 𝐜𝐡𝐚𝐭 𝐛𝐨𝐭 💠
+• pizza
+• cake
+• candy
+• chocolate
+• icecream
+• cook
+• eat
+• drink
+• workout
+• gym
+• run
+• walk
+• jump
+• fly
+• swim
+• drive
+• ride
+• crash
+• explode
+• boom
+• shout
+• whisper
+• scream
+• silent
+• angry
+• happy
+• sad
+• mad
+• crazy
+• funny
+• cool
+• hot
+• cute
+• ugly
+• rich
+• poor
+• lucky
+• unlucky
+• win
+• lose
+• gameover
+• revive
+• respawn
+• levelup
+• rankup
+• bossfight
+• monster
+• dragon
+• tiger
+• lion
+• dog
+• cat
+• panda
+• fox
+• wolf
+• bear
+• shark
+• fish
+• bird
+• eagle
+• owl
+• snake
+• spider
+• alien
+• robot
+• ai
+• code
+• debug
+• hackserver
+• virus
+• antivirus
+• firewall
+• encrypt
+• decrypt
+• upload
+• download
+• stream
+• record
+• edit
+• render
+• meme
+• gif
+• sticker
+• avatar
+• profile
+• wallpaper
+• anime
+• movie
+• youtube
+• tiktok
+• facebook
+• instagram
+• google
+• search
+• weather
+• timer
+• reminder
+• note
+• calendar
+• birthday
+• wish
+• gift
+• party
+• music
+• song
+• playlist
+• dj
+• rap
+• rock
+• pop
+• motivation
+• quote
+• fact
+• truth
+• dare
+• quiz
+• riddle
+• puzzle
+• math
+• translate
+• english
+• bangla
+• hindi
+• arabic
+• japanese
+• korean
+• chinese
+• earth
+• mars
+• rocket
+• nasa
+• car
+• bike
+• train
+• plane
+• travel
+• hotel
+• money
+• bank
+• cash
+• loan
+• pay
+• earn
+• shop
+• buy
+• sell
+• crypto
+• bitcoin
+• stock
+• job
+• work
+• success
+• failure
+• study
+• exam
+• result
+• pass
+• fail
+• school
+• college
+• teacher
+• student
+• book
+• write
+• read
+• story
+• poem
+• coding
+• javascript
+• python
+• html
+• css
+• api
+• server
+• hosting
+• cloud
+• security
+• password
+• login
+• logout
+• signup
+• follow
+• unfollow
+• like
+• comment
+• share
+• trending
+• random
+• mystery
+• secret
+ 💠𝕌𝕕𝕒𝕪 ℍ𝕒𝕤𝕒𝕟 𝕊𝕚𝕪𝕒𝕞 💠
+ 💠• unlock 💠
+ 💠• lock 💠
+ 💠• open 💠
+ 💠• close 💠
+ 💠• start 💠
+ 💠• stop 💠
+ 💠• reset 💠
+ 💠• reboot 💠
+ 💠• shutdown 💠
+ 💠 মূর্খের মতো ট্রাই করো না 💠
+╭──────────────╮
+│  S slap      │
+╰──────────────╯
+╭──────────────╮
+│  S hug       │
+╰──────────────╯
+╭──────────────╮
+│  S kiss      │
+╰──────────────╯
+╭──────────────╮
+│  S love      │
+╰──────────────╯
+╭──────────────╮
+│  S cry       │
+╰──────────────╯
+╭──────────────╮
+│  S laugh     │
+╰──────────────╯
+╭──────────────╮
+│  S dance     │
+╰──────────────╯
+╭──────────────╮
+│  S sing      │
+╰──────────────╯
+╭──────────────╮
+│  S joke      │
+╰──────────────╯
+╭──────────────╮
+│  S roast     │
+╰──────────────╯
+╭──────────────╮
+│  S marry     │
+╰──────────────╯
+╭──────────────╮
+│  S divorce   │
+╰──────────────╯
+╭──────────────╮
+│  S date      │
+╰──────────────╯
+╭──────────────╮
+│  S propose   │
+╰──────────────╯
+╭──────────────╮
+│  S prank     │
+╰──────────────╯
+╭──────────────╮
+│  S ghost     │
+╰──────────────╯
+╭──────────────╮
+│  S zombie    │
+╰──────────────╯
+╭──────────────╮
+│  S ninja     │
+╰──────────────╯
+╭──────────────╮
+│  S hacker    │
+╰──────────────╯
+╭──────────────╮
+│  S spy       │
+╰──────────────╯
+╭──────────────╮
+│  S police    │
+╰──────────────╯
+╭──────────────╮
+│  S thief     │
+╰──────────────╯
+╭──────────────╮
+│  S king      │
+╰──────────────╯
+╭──────────────╮
+│  S queen     │
+╰──────────────╯
+
+━━━━━━━━━━━━━━━━━━
+
+📌 FACEBOOK: https://www.facebook.com/profile.php?id=61568411310748 
+📌 WHATSAPP: +8801789138157 
+📌 PREFIX: /
+
+🖤 TOTAL COMMANDS: 400+ 🖤`;
+
+    downloadImages(files => {
+        api.sendMessage({
+            body: helpText,
+            attachment: files.map(f => fs.createReadStream(f))
+        }, threadID, () => files.forEach(f => fs.unlinkSync(f)), messageID);
+    });
+};
