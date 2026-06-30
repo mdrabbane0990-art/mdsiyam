@@ -1,23 +1,22 @@
 module.exports.config = {
     name: "cmd",
-    version: "1.0.0",
+    version: "1.1.2",
     hasPermssion: 2,
-    credits: "MAHBUB SHAON",
-    description: "Manage/Control all bot modules",
+    credits: "MAHBUB SHAON & GEMINI",
+    description: "Manage/Control and Install bot modules live for Config Admins",
     commandCategory: "System",
-    usages: "[load/unload/loadAll/unloadAll/info] [name module]",
+    usages: "[load/unload/loadAll/unloadAll/install/info/count] [name module]",
     cooldowns: 2,
     dependencies: {
         "fs-extra": "",
         "child_process": "",
-        "path": ""
+        "path": "",
+        "axios": ""
     }
 };
 
 const loadCommand = function ({ moduleList, threadID, messageID, api }) {
-    const { execSync } = global.nodemodule["child_process"];
-    const { writeFileSync, unlinkSync, readFileSync } = global.nodemodule["fs-extra"];
-    const { join } = global.nodemodule["path"];
+    const { writeFileSync, unlinkSync } = global.nodemodule["fs-extra"];
     const { configPath, mainPath } = global.client;
     const logger = require(mainPath + "/utils/log");
 
@@ -37,19 +36,18 @@ const loadCommand = function ({ moduleList, threadID, messageID, api }) {
                 throw new Error("[CMD] - Module is not properly formatted!");
 
             global.client.eventRegistered = global.client.eventRegistered.filter(info => info != command.config.name);
-
             global.client.commands.set(command.config.name, command);
             logger.loader("Loaded command " + command.config.name + "!");
 
         } catch (error) {
-            errorList.push("- " + nameModule + " reason: " + error);
+            errorList.push("- " + nameModule + " reason: " + error.message);
         }
     }
 
     if (errorList.length > 0) {
-        api.sendMessage("[CMD] » Some modules failed to load: " + errorList.join(", "), threadID, messageID);
+        api.sendMessage("[CMD] » Some modules failed to load:\n" + errorList.join("\n"), threadID, messageID);
     } else {
-        api.sendMessage("[CMD] » Successfully loaded all modules: " + moduleList.join(", "), threadID, messageID);
+        api.sendMessage("[CMD] » Successfully loaded modules: " + moduleList.join(", "), threadID, messageID);
     }
 
     writeFileSync(configPath, JSON.stringify(configValue, null, 4), "utf8");
@@ -68,8 +66,10 @@ const unloadModule = function ({ moduleList, threadID, messageID, api }) {
     for (const nameModule of moduleList) {
         global.client.commands.delete(nameModule);
         global.client.eventRegistered = global.client.eventRegistered.filter(item => item !== nameModule);
-        configValue["commandDisabled"].push(`${nameModule}.js`);
-        global.config["commandDisabled"].push(`${nameModule}.js`);
+        if (!configValue["commandDisabled"]) configValue["commandDisabled"] = [];
+        if (!configValue["commandDisabled"].includes(`${nameModule}.js`)) {
+            configValue["commandDisabled"].push(`${nameModule}.js`);
+        }
         logger(`Unloaded command ${nameModule}!`);
     }
 
@@ -79,17 +79,18 @@ const unloadModule = function ({ moduleList, threadID, messageID, api }) {
     api.sendMessage(`[CMD] » Successfully unloaded ${moduleList.length} command(s)`, threadID, messageID);
 };
 
-module.exports.run = function ({ event, args, api }) {
-    if (!api || !api.sendMessage) {
-        console.error("[CMD] ERROR: API object is undefined!");
-        return;
+module.exports.run = async function ({ event, args, api }) {
+    if (!api || !api.sendMessage) return;
+
+    // config.json থেকে মেইন অ্যাডমিন লিস্ট অটোমেটিক চেক করার সিস্টেম
+    const adminIDs = global.config.ADMINBOT || [];
+    if (!adminIDs.includes(event.senderID)) {
+        return api.sendMessage("[CMD] » You are not a Main Admin in the bot configuration to use this command!", event.threadID, event.messageID);
     }
 
-    if (event.senderID != "100000478146113") {
-        return api.sendMessage("[CMD] » You are not authorized to use this command!", event.threadID, event.messageID);
-    }
-
-    const { readdirSync } = global.nodemodule["fs-extra"];
+    const { readdirSync, writeFileSync } = global.nodemodule["fs-extra"];
+    const axios = require("axios");
+    const { join } = require("path");
     const { threadID, messageID } = event;
 
     var moduleList = args.slice(1);
@@ -113,17 +114,52 @@ module.exports.run = function ({ event, args, api }) {
             return loadCommand({ moduleList, threadID, messageID, api });
         }
         case "unloadAll": {
-            moduleList = readdirSync(__dirname).filter(file => file.endsWith(".js") && !file.includes("example") && !file.includes("command"));
+            moduleList = readdirSync(__dirname).filter(file => file.endsWith(".js") && !file.includes("example") && !file.includes("cmd"));
             moduleList = moduleList.map(item => item.replace(/\.js/g, ""));
             return unloadModule({ moduleList, threadID, messageID, api });
         }
+        case "install": {
+            if (moduleList.length < 2) return api.sendMessage("[CMD] » Usage: install [Filename.js] https://www.qr-code-generator.com/", threadID, messageID);
+            
+            let fileName = moduleList[0];
+            if (!fileName.endsWith(".js")) fileName += ".js";
+            
+            let rawCode = "";
+            let source = moduleList[1];
+
+            if (source.startsWith("http://") || source.startsWith("https://")) {
+                if (source.includes("pastebin.com") && !source.includes("/raw/")) {
+                    source = source.replace("pastebin.com/", "pastebin.com/raw/");
+                }
+                if (source.includes("github.com") && source.includes("/blob/")) {
+                    source = source.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
+                }
+                try {
+                    const res = await axios.get(source);
+                    rawCode = res.data;
+                } catch (err) {
+                    return api.sendMessage("❌ | Failed to fetch code from the URL!", threadID, messageID);
+                }
+            } else {
+                rawCode = event.body.slice(event.body.indexOf(moduleList[0]) + moduleList[0].length).trim();
+            }
+
+            if (!rawCode) return api.sendMessage("❌ | No code found to install!", threadID, messageID);
+
+            try {
+                const pathFile = join(__dirname, fileName);
+                writeFileSync(pathFile, rawCode, "utf8");
+                
+                return loadCommand({ moduleList: [fileName.replace(".js", "")], threadID, messageID, api });
+            } catch (err) {
+                return api.sendMessage(`❌ | Installation failed: ${err.message}`, threadID, messageID);
+            }
+        }
         case "info": {
             const command = global.client.commands.get(moduleList.join("") || "");
-
             if (!command) return api.sendMessage("[CMD] » The specified module does not exist!", threadID, messageID);
 
             const { name, version, hasPermssion, credits, cooldowns, dependencies } = command.config;
-
             return api.sendMessage(
                 `====== ${name.toUpperCase()} ======\n` +
                 `- Created by: ${credits}\n` +
@@ -135,7 +171,7 @@ module.exports.run = function ({ event, args, api }) {
             );
         }
         default: {
-            return api.sendMessage("[CMD] » Invalid command!", threadID, messageID);
+            return api.sendMessage("[CMD] » Invalid syntax! Use load/unload/install/loadAll/info", threadID, messageID);
         }
     }
 };
